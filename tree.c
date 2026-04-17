@@ -106,33 +106,26 @@ int tree_serialize(const Tree *tree, void **data_out, size_t *len_out) {
 
 // ─── FIXED IMPLEMENTATION ──────────────────────────────────────────────────
 
-// Recursive helper
+// helper function for tree_from_index
 static int write_tree_recursive(IndexEntry *entries, int count, ObjectID *id_out) {
     Tree tree;
     tree.count = 0;
-
     int i = 0;
 
     while (i < count) {
         char *slash = strchr(entries[i].path, '/');
 
         if (!slash) {
-            // FILE
             TreeEntry *e = &tree.entries[tree.count++];
-
             e->mode = entries[i].mode;
             e->hash = entries[i].hash;
             strcpy(e->name, entries[i].path);
-
             i++;
         } else {
-            // DIRECTORY
             char dirname[256];
             int len = slash - entries[i].path;
-
             strncpy(dirname, entries[i].path, len);
             dirname[len] = '\0';
-
             IndexEntry sub_entries[256];
             int sub_count = 0;
 
@@ -194,5 +187,5 @@ int tree_from_index(ObjectID *id_out) {
         }
     }
 
-    return write_tree_recursive(index.entries, index.count, id_out);
+    return write_tree_recursive(index.entries, index.count, id_out); //recursive helper function
 }
