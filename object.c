@@ -111,13 +111,11 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     memcpy(full, header, header_len);
     memcpy(full + header_len, data, len);
 
-    // Compute hash
     ObjectID id;
     compute_hash(full, total_len, &id);
 
     if (id_out) *id_out = id;
 
-    // Deduplication
     if (object_exists(&id)) {
         free(full);
         return 0;
@@ -126,7 +124,6 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     char path[512];
     object_path(&id, path, sizeof(path));
 
-    // Create directory
     char dir[512];
     strncpy(dir, path, sizeof(dir));
     char *slash = strrchr(dir, '/');
@@ -137,7 +134,6 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     *slash = '\0';
     mkdir(dir, 0755);
 
-    // Temp file path
     char tmp_path[512];
     if (snprintf(tmp_path, sizeof(tmp_path), "%s/tmpXXXXXX", dir) >= (int)sizeof(tmp_path)) {
       free(full);
@@ -226,8 +222,7 @@ int object_read(const ObjectID *id, ObjectType *type_out, void **data_out, size_
         return -1;
     }
     fclose(fp);
-
-    // Verify hash
+    
     ObjectID computed;
     compute_hash(buffer, file_size, &computed);
 
@@ -236,7 +231,6 @@ int object_read(const ObjectID *id, ObjectType *type_out, void **data_out, size_
         return -1;
     }
 
-    // Parse header
     char *null_pos = memchr(buffer, '\0', file_size);
     if (!null_pos) {
         free(buffer);
