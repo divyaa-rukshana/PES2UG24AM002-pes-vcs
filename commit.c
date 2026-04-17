@@ -17,6 +17,7 @@
 #include "commit.h"
 #include "index.h"
 #include "tree.h"
+#include "pes.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -194,8 +195,54 @@ int head_update(const ObjectID *new_commit) {
 //
 // Returns 0 on success, -1 on error.
 int commit_create(const char *message, ObjectID *commit_id_out) {
-    // TODO: Implement commit creation
-    // (See Lab Appendix for logical steps)
-    (void)message; (void)commit_id_out;
-    return -1;
+    ObjectID tree_id, parent_id;
+
+    // 1. Build tree from index
+    if (tree_from_index(&tree_id) != 0)
+        return -1;
+
+    // 2. Check parent
+    int has_parent = (head_read(&parent_id) == 0);
+
+    // 3. Fill commit struct
+    Commit commit = {0};
+    commit.tree = tree_id;
+    commit.has_parent = has_parent;
+
+    if (has_parent)
+        commit.parent = parent_id;
+
+    // 4. Author + timestamp
+    const char *author = pes_author();
+    snprintf(commit.author, sizeof(commit.author), "%s", author);
+    commit.timestamp = (uint64_t)time(NULL);
+
+    // 5. Message
+    strncpy(commit.message, message, sizeof(commit.message) - 1);
+    commit.message[sizeof(commit.message) - 1] = '\0';
+
+    // 6. Serialize (IMPORTANT — use provided function)
+    void *data;
+    size_t len;
+    if (commit_serialize(&commit, &data, &len) != 0)
+        return -1;
+
+    // 7. Write commit object
+    if (object_write(OBJ_COMMIT, data, len, commit_id_out) != 0) {
+        free(data);
+        return -1;
+    }
+
+    free(data);
+
+    // 8. Update HEAD
+    if (head_update(commit_id_out) != 0)
+        return -1;
+
+    // 10. Print
+    char hex[HASH_HEX_SIZE + 1];
+    hash_to_hex(commit_id_out, hex);
+    printf("Committed as %s\n", hex);
+
+    return 0;
 }
