@@ -26,7 +26,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-// Forward declarations (implemented in object.c)
+// Declarations
 int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out);
 int object_read(const ObjectID *id, ObjectType *type_out, void **data_out, size_t *len_out);
 
@@ -197,14 +197,14 @@ int head_update(const ObjectID *new_commit) {
 int commit_create(const char *message, ObjectID *commit_id_out) {
     ObjectID tree_id, parent_id;
 
-    // 1. Build tree from index
+    // 1. Building tree from index
     if (tree_from_index(&tree_id) != 0)
         return -1;
 
-    // 2. Check parent
+    // 2. Checking parent
     int has_parent = (head_read(&parent_id) == 0);
 
-    // 3. Fill commit struct
+    // 3. Filling commit struct
     Commit commit = {0};
     commit.tree = tree_id;
     commit.has_parent = has_parent;
@@ -221,7 +221,7 @@ int commit_create(const char *message, ObjectID *commit_id_out) {
     strncpy(commit.message, message, sizeof(commit.message) - 1);
     commit.message[sizeof(commit.message) - 1] = '\0';
 
-    // 6. Serialize (IMPORTANT — use provided function)
+    // 6. Serialize
     void *data;
     size_t len;
     if (commit_serialize(&commit, &data, &len) != 0)
