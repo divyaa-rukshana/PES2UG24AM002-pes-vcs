@@ -139,18 +139,14 @@ int index_load(Index *index) {
 
     FILE *fp = fopen(INDEX_FILE, "r");
     if (!fp) {
-        return 0; // no index file yet = empty index
+        return 0;
     }
 
     while (index->count < MAX_INDEX_ENTRIES) {
         IndexEntry *e = &index->entries[index->count];
         char hex[HASH_HEX_SIZE + 1];
 
-        int rc = fscanf(fp, "%o %64s %lu %u %511[^\n]\n",
-                        &e->mode,
-                        hex,
-                        &e->mtime_sec,
-                        &e->size,
+        int rc = fscanf(fp, "%o %64s %lu %u %511[^\n]\n", &e->mode, hex, &e->mtime_sec, &e->size,
                         e->path);
 
         if (rc == EOF) break;
@@ -187,6 +183,7 @@ static int cmp_entries(const void *a, const void *b) {
     return strcmp(ea->path, eb->path);
 }
 
+// writes the in-memory staging area
 int index_save(const Index *index) {
     qsort((void *)index->entries, index->count, sizeof(IndexEntry), cmp_entries);
 
