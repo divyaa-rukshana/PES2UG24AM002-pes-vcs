@@ -243,6 +243,8 @@ int commit_create(const char *message, ObjectID *commit_id_out) {
     char hex[HASH_HEX_SIZE + 1];
     hash_to_hex(commit_id_out, hex);
     printf("Committed as %s\n", hex);
+    
+    printf("Creating commit...\n");
 
     return 0;
 }
